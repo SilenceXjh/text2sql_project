@@ -1,0 +1,5 @@
+claude
+*.json
+outputs
+__pycache__/
+playground
