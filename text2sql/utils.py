@@ -86,3 +86,32 @@ def extract_sql(generated_text: str):
         code = generated_text.strip()
 
     return code
+
+
+def construct_schema_text(schema: dict):
+    schema_text = ""
+    for table_name in schema:
+        schema_text += f"Table: {table_name}\n"
+        schema_text += "Columns:\n"
+        for column_name in schema[table_name]:
+            schema_text += f"- {column_name}\n"
+        schema_text += "\n"
+
+    return schema_text[:-1]
+
+
+def construct_sft_prompt(schema: dict, question: str):
+    schema_text = construct_schema_text(schema)
+
+    prompt = f"""You are an expert SQL generator.
+Given the database schema and a natural language question, generate a correct SQL query.
+
+### Database Schema:
+{schema_text}
+### Question:
+{question}
+
+### SQL:
+"""
+    
+    return prompt

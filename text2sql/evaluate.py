@@ -31,7 +31,7 @@ def eval_exec_match(db: str, p_str: str, g_str: str) -> bool:
     
 
 db_dir = "/data0/xjh/spider_data/test_database"
-result_file = "/data0/xjh/text2sql_project/outputs/qwen-coder-7B.json"
+result_file = "/data0/xjh/text2sql_project/outputs/qwen-coder-1.5B-sft3.json"
 result_data = load_json_data(result_file)
 
 total = 0
