@@ -6,19 +6,19 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import LoraConfig, get_peft_model, TaskType
 
 from utils import load_json_data, construct_sft_prompt, construct_sft_prompt_1
 
 # -------------------- USER CONFIG --------------------
-MODEL_ID = "/data1/model/qwen/Qwen/Qwen2.5-Coder-0.5B" 
+MODEL_ID = "/data1/model/qwen/Qwen/Qwen2.5-Coder-1.5B" 
 SPIDER_DATA_PATH = "/data0/xjh/text2sql_project/data/train_spider_simple.json"
 SCHEMA_PATH = "/data0/xjh/text2sql_project/data/db_schemas_with_fk.json"
-OUTPUT_DIR = "./spider-lora-qwen0.5B-r16-mlp"
+OUTPUT_DIR = "./spider-full-sft-qwen1.5B"
 TRAIN_BATCH_SIZE = 8
+ACCUMULATION_STEPS = 2
 EVAL_BATCH_SIZE = 4
-EPOCHS = 10
-LR = 2e-4
+EPOCHS = 5
+LR = 2e-5
 MAX_LENGTH = 512
 SEED = 42
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -106,32 +106,21 @@ print("tokenizer vocab size:", len(tokenizer))
 
 model = AutoModelForCausalLM.from_pretrained(MODEL_ID, trust_remote_code=True)
 
-# ------- 注入 LoRA -------
-lora_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
-    target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj"],  # 若模型命名不同请调整
-    lora_dropout=0.05,
-    bias="none",
-    task_type=TaskType.CAUSAL_LM,
-)
-model = get_peft_model(model, lora_config)
-model.print_trainable_parameters()
-
 # 单 GPU/CPU 环境下把 model 丢到 device（注意：若 model 很大需用 device_map 或 8bit 加载）
 model.to(DEVICE)
+
 
 # ------- Dataset -> DataLoader -------
 train_dataset = SpiderDataset(train_data, tokenizer, max_length=MAX_LENGTH)
 val_dataset = SpiderDataset(val_data, tokenizer, max_length=MAX_LENGTH)
 
-train_loader = DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True,
+train_loader = DataLoader(train_dataset, batch_size=(TRAIN_BATCH_SIZE//ACCUMULATION_STEPS), shuffle=True,
                           collate_fn=lambda b: collate_fn(b, tokenizer.pad_token_id))
 val_loader = DataLoader(val_dataset, batch_size=EVAL_BATCH_SIZE, shuffle=False,
                         collate_fn=lambda b: collate_fn(b, tokenizer.pad_token_id))
 
 # ------- optimizer & scheduler -------
-optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)
+optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
 # 可选：加 LR Scheduler（这里不强制）
 
 # ------- training loop with validation -------
@@ -143,26 +132,24 @@ for epoch in range(1, EPOCHS + 1):
     running_loss = 0.0
     step_in_epoch = 0
     for batch in train_loader:
-        # # --- 每 50 step 开始计时 ---
-        # if step_in_epoch % LOG_INTERVAL == 0:
-        #     torch.cuda.synchronize()
-        #     window_start = time.perf_counter()
         batch = {k: v.to(DEVICE) for k, v in batch.items()}
         outputs = model(**batch)
-        loss = outputs.loss
+        loss = outputs.loss / ACCUMULATION_STEPS
         loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+        # optimizer.step()
+        # optimizer.zero_grad()
 
-        running_loss += loss.item()
-        global_step += 1
+        running_loss += loss.item() * ACCUMULATION_STEPS
         step_in_epoch += 1
+
+        if step_in_epoch % ACCUMULATION_STEPS == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+            global_step += 1
+        
         if step_in_epoch % 50 == 0:
             avg = running_loss / step_in_epoch
             print(f"Epoch {epoch} step {step_in_epoch} avg_train_loss={avg:.4f}")
-            # torch.cuda.synchronize()
-            # window_time = time.perf_counter() - window_start
-            # print(f"last {LOG_INTERVAL} step time: {window_time:.3f}s")
 
     avg_epoch_loss = running_loss / max(1, step_in_epoch)
     print(f"Epoch {epoch} finished. avg_train_loss={avg_epoch_loss:.4f}")
@@ -215,9 +202,9 @@ for epoch in range(1, EPOCHS + 1):
             fw.write(json.dumps(item, ensure_ascii=False) + "\n")
     print(f"Saved {len(gen_outs)} generated examples to {gen_path}")
 
-    # ----- 保存 LoRA adapter（每个 epoch 覆盖一次） -----
+    # ----- 保存 model checkpoint（每个 epoch 覆盖一次） -----
     save_dir = os.path.join(OUTPUT_DIR, f"checkpoint-epoch{epoch}")
     model.save_pretrained(save_dir)
     tokenizer.save_pretrained(save_dir)
-    print(f"Saved LoRA checkpoint to {save_dir}")
+    print(f"Saved checkpoint to {save_dir}")
 

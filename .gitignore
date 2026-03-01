@@ -1,6 +1,8 @@
-claude
 *.json
 outputs
 __pycache__/
 playground
-spider-lora-qwen1.5B
+spider-lora-*
+spider-full*
+nohup.out
+*.log

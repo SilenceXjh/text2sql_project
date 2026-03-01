@@ -4,7 +4,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from text2sql.utils import construct_sft_prompt
+from text2sql.utils import construct_sft_prompt, construct_normal_prompt
 
 schema = {
     "perpetrator": [
@@ -29,4 +29,10 @@ schema = {
 question = "How many people"
 
 sft_prompt = construct_sft_prompt(schema, question)
+print("sft prompt:")
 print(sft_prompt)
+
+
+normal_prompt = construct_normal_prompt(schema, question)
+print("normal prompt:")
+print(normal_prompt)
