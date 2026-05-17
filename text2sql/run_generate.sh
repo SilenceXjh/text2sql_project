@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # 定义基础路径（固定部分）
-MODEL_PATH="/data1/model/qwen/Qwen/Qwen2.5-Coder-0.5B"
-BASE_ADAPTER_PATH="/data0/xjh/text2sql_project/spider-lora-qwen0.5B-r16-mlp/checkpoint-epoch"
-BASE_OUTPUT_PATH="/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-0.5B-sft-mlp-"
+MODEL_PATH="/data1/model/qwen/Qwen/Qwen2.5-Coder-1.5B"
+BASE_ADAPTER_PATH="/data0/xjh/text2sql_project/spider-lora-qwen1.5B-r16-mlp/checkpoint-epoch"
+BASE_OUTPUT_PATH="/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-1.5B-sft-r16-mlp-"
 
 # 循环遍历 1 到 10
 for i in {1..10}; do

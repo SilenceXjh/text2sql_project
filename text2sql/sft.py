@@ -11,10 +11,10 @@ from peft import LoraConfig, get_peft_model, TaskType
 from utils import load_json_data, construct_sft_prompt, construct_sft_prompt_1
 
 # -------------------- USER CONFIG --------------------
-MODEL_ID = "/data1/model/qwen/Qwen/Qwen2.5-Coder-0.5B" 
+MODEL_ID = "/data1/model/qwen/Qwen/Qwen2.5-Coder-1.5B" 
 SPIDER_DATA_PATH = "/data0/xjh/text2sql_project/data/train_spider_simple.json"
 SCHEMA_PATH = "/data0/xjh/text2sql_project/data/db_schemas_with_fk.json"
-OUTPUT_DIR = "./spider-lora-qwen0.5B-r16-mlp"
+OUTPUT_DIR = "./spider-lora-qwen1.5B-r16-mlp"
 TRAIN_BATCH_SIZE = 8
 EVAL_BATCH_SIZE = 4
 EPOCHS = 10
