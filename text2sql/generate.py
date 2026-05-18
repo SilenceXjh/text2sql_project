@@ -5,11 +5,11 @@ from utils import load_json_data, load_model, construct_full_prompt, model_gener
 
 model_path = "/data1/model/qwen/Qwen/Qwen2.5-Coder-0.5B-Instruct"
 test_dataset_path = "/data0/xjh/spider_data/test.json"
-has_fk = False
-db_schemas_path = "/data0/xjh/text2sql_project/data/test_db_schemas.json"
-# has_fk = True
-# db_schemas_path = "/data0/xjh/text2sql_project/data/test_db_schemas_with_fk.json"
-output_file_path = "/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-0.5B.json"
+# has_fk = False
+# db_schemas_path = "/data0/xjh/text2sql_project/data/test_db_schemas.json"
+has_fk = True
+db_schemas_path = "/data0/xjh/text2sql_project/data/test_db_schemas_with_fk.json"
+output_file_path = "/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-0.5B-fk.json"
 output_dir = "/data0/xjh/text2sql_project/experiment_outputs"
 
 def generate_all():

@@ -96,7 +96,7 @@ def eval_exec_match(db: str, p_str: str, g_str: str) -> Tuple[str, Optional[Base
     
 
 db_dir = "/data0/xjh/spider_data/test_database"
-result_file = "/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-1.5B-fk.json"
+result_file = "/data0/xjh/text2sql_project/experiment_outputs/qwen-coder-7B-fk-exec-refine.json"
 test_data_path = "/data0/xjh/text2sql_project/data/test_spider_simple.json"
 
 result_data = load_json_data(result_file)
